@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta Interaktif dengan GeoJSON</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.js"></script>
+
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+          background-color: #f4f4f4;
+          display: flex;
+          flex-direction: row;
+        }
+    
+        .sidebar {
+          width: 250px;
+          background-color: #2c3e50;
+          color: #ecf0f1;
+          padding: 20px;
+          box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+          height: 100vh;
+        }
+    
+        .sidebar h2 {
+          font-size: 20px;
+          margin-bottom: 15px;
+          border-bottom: 2px solid #ecf0f1;
+          padding-bottom: 5px;
+        }
+    
+        .sidebar ul {
+          list-style: none;
+          padding-left: 0;
+        }
+    
+        .sidebar ul li {
+          margin: 10px 0;
+        }
+    
+        .sidebar ul li a {
+          color: #1abc9c;
+          text-decoration: none;
+          font-weight: bold;
+          transition: color 0.3s;
+        }
+    
+        .sidebar ul li a:hover {
+          color: #f39c12;
+        }
+    
+        #map {
+          flex: 1;
+          height: 100vh;
+        }
+      </style>    
+</head>
+<body>
+    <div class="sidebar">
+      <h2>Tempat Ikonik Jogja</h2>
+      <ul>
+        <li><a href="https://id.wikipedia.org/wiki/Gunung_Merapi" target="_blank">Gunung Merapi</a></li>
+        <li><a href="https://id.wikipedia.org/wiki/Tugu_Yogyakarta" target="_blank">Tugu Yogyakarta</a></li>
+        <li><a href="https://id.wikipedia.org/wiki/Keraton_Ngayogyakarta_Hadiningrat" target="_blank">Keraton Yogyakarta</a></li>
+        <li><a href="https://id.wikipedia.org/wiki/Panggung_Krapyak" target="_blank">Panggung Krapyak</a></li>
+        <li><a href="https://id.wikipedia.org/wiki/Pantai_Parangtritis" target="_blank">Pantai Parangtritis</a></li>
+      </ul>
+    </div>
+    <div id="map"></div>
+    <script src="M7.js"></script> <!-- pastikan file ini tidak error -->
+    <script>
+        // Inisialisasi peta
+        var map = L.map('map').setView([-7.79558, 110.36949], 10);
+      
+        // Basemap (default: OpenStreetMap)
+        var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+      
+        var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          attribution: 'Tiles &copy; Esri'
+        });
+      
+        var carto = L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap & CartoDB',
+          subdomains: 'abcd',
+          maxZoom: 19
+        });
+      
+        // === GeoJSON Layer ===
+        var geojsonLayer = L.geoJSON(jogjageojson, {
+          style: function(feature) {
+            switch (feature.properties.KABUPATEN) {
+              case 'Gunung Kidul': return { color: "#ff9900" };
+              case 'Sleman': return { color: "red" };
+              case 'Bantul': return { color: "blue" };
+              case 'Yogyakarta': return { color: "green" };
+              case 'Kulon Progo': return { color: "magenta" };
+            }
+          },
+          onEachFeature: function(feature, layer) {
+            layer.bindPopup('Kecamatan adalah <strong>' + feature.properties.KECAMATAN + '</strong>');
+          }
+        });
+      
+        // === Marker Layer ===
+        var markerLayer = L.layerGroup();
+        var merapi = L.marker([-7.540717, 110.446178]).bindPopup("<b>Gunung Merapi</b>").addTo(markerLayer);
+        var tugu = L.marker([-7.782889, 110.367083]).bindPopup("<b>Tugu Yogyakarta</b>").addTo(markerLayer);
+        var keraton = L.marker([-7.805917, 110.364917]).bindPopup("<b>Keraton Yogyakarta</b>").addTo(markerLayer);
+        var krapyak = L.marker([-7.821083, 110.353333]).bindPopup("<b>Panggung Krapyak</b>").addTo(markerLayer);
+        var parangtritis = L.marker([-8.026667, 110.328611]).bindPopup("<b>Pantai Parangtritis</b>").addTo(markerLayer);
+      
+        // Tambahkan semua layer ke peta
+        geojsonLayer.addTo(map);
+        markerLayer.addTo(map);
+      
+        // Layer control
+        var baseMaps = {
+          "OpenStreetMap": osm,
+          "Citra Satelit": esri,
+          "Carto Dark": carto
+        };
+      
+        var overlayMaps = {
+          "Batas Wilayah": geojsonLayer,
+          "Tempat Ikonik": markerLayer
+        };
+      
+        L.control.layers(baseMaps, overlayMaps).addTo(map);
+      </script>
+      
+</body>
+    <!-- Memuat data GeoJSON -->
+    <script src="M7.js"></script>
+
+    <script>
+        var map = L.map('map').setView([-7.79558, 110.36949], 10);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        L.geoJSON(jogjageojson, {
+            style: function(feature) {
+                switch (feature.properties.KABUPATEN) {
+                    case 'Gunung Kidul': return {color: "#ff9900"};
+                    case 'Sleman': return {color: "red"};
+                    case 'Bantul': return {color: "blue"};
+                    case 'Yogyakarta': return {color: "green"};
+                    case 'Kulon Progo': return {color: "magenta"};
+                }
+            },
+            onEachFeature: function (feature, layer) {
+                layer.bindPopup('Kecamatan adalah <strong>' + feature.properties.KECAMATAN + '</strong>');
+            }
+        }).addTo(map);
+    </script>
+</body>
+</html>
